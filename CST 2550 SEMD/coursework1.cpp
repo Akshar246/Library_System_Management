@@ -2,15 +2,15 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <functional>
-#include <cctype>
 #include <string>
-#include "staff.h" // Assuming you have defined the staff class in this header file
+#include <algorithm>
+#include "staff.h"
 #include "member.h"
 #include "book.h"
 
 // Function for the Book categories
-std::vector<std::string> getBookCategories() {
+std::vector<std::string> getBookCategories()
+{
     return {
         "Science fiction",
         "Satire",
@@ -28,52 +28,46 @@ std::vector<std::string> getBookCategories() {
         "Fantasy",
         "History",
         "Science",
-        "Art"
-    };
+        "Art\n"};
 }
 
-
 // Function to display all available book categories with numbers
-void displayCategories(const std::vector<std::string>& categories) {
-    std::cout << "Select a category by entering the corresponding number:\n\n";
+void displayCategories(const std::vector<std::string> &categories)
+{
     int index = 1;
-    for (const auto& category : categories) {
+    for (const auto &category : categories)
+    {
         std::cout << index << ". " << category << "\n";
         ++index;
     }
 }
 
-
 // Function to trim leading and trailing whitespaces from a string
-static inline std::string trim(const std::string &s) {
+static std::string trim(const std::string &s)
+{
     std::string result = s;
-    result.erase(result.begin(), std::find_if(result.begin(), result.end(), [](unsigned char ch) {
-        return !std::isspace(ch);
-    }));
 
-    result.erase(std::find_if(result.rbegin(), result.rend(), [](unsigned char ch) {
-        return !std::isspace(ch);
-    }).base(), result.end());
+    // Trim leading whitespaces
+    result.erase(result.begin(), std::find_if(result.begin(), result.end(),
+                                              [](unsigned char ch)
+                                              { return !std::isspace(ch); }));
+
+    // Trim trailing whitespaces
+    result.erase(std::find_if(result.rbegin(), result.rend(),
+                              [](unsigned char ch)
+                              { return !std::isspace(ch); })
+                     .base(),
+                 result.end());
 
     return result;
 }
-
-
-// Function to get books by category
-std::vector<Book> getBooksByCategory(const std::vector<Book> &books, const std::string &category) {
-    std::vector<Book> booksInCategory;
-    
-    for (const auto &book : books) {
-        if (trim(book.getBookType()) == trim(category)) {
-            booksInCategory.push_back(book);
-        }
-    }
-
-    return booksInCategory;
+// Function to convert a string to lowercase
+static std::string toLower(const std::string &s)
+{
+    std::string result = s;
+    std::transform(result.begin(), result.end(), result.begin(), (int (*)(int))std::tolower);
+    return result;
 }
-
-
-
 
 // Function to load staff members from the file
 std::vector<staff> loadStaffFromTxt()
@@ -99,38 +93,8 @@ std::vector<staff> loadStaffFromTxt()
             }
         }
         inFile.close();
-            }
+    }
     return loadedStaffMembers;
-}
-
-// Function to load books from txt file 
-std::vector<Book> loadBooksFromLibrary(const std::string& filePath) {
-    std::vector<Book> books;
-
-    std::ifstream inFile(filePath);
-    if (!inFile.is_open()) {
-        std::cerr << "Error opening file: " << filePath << "\n";
-        return books;
-    }
-
-    std::string line;
-    while (std::getline(inFile, line)) {
-        std::istringstream iss(line);
-        std::string token;
-        std::vector<std::string> tokens;
-
-        while (std::getline(iss, token, ',')) {
-            tokens.push_back(token);
-        }
-
-        if (tokens.size() == 6) {
-            Book book(std::stoi(tokens[0]), tokens[1], std::stoi(tokens[2]), tokens[3], tokens[4], tokens[5]);
-            books.push_back(book);
-        }
-    }
-
-    inFile.close();
-    return books;
 }
 
 // Main Menu for the user
@@ -142,36 +106,93 @@ void admin_Menu()
     std::cout << "\n3. Return Book";
     std::cout << "\n4. Display All Books";
     std::cout << "\n5. Exit";
-    std::cout << "\nEnter your choice (1-4): ";
+    std::cout << "\nEnter your choice (1-5): ";
 }
 
-// Registration for the new member
-void getMemberID(std::vector<Member> &members)
+// Function to get books by category
+std::vector<std::string> getBooksByCategory(const std::vector<std::string> &allBooks, const std::string &category)
 {
-    std::string name, address, email, password;
+    std::vector<std::string> booksInCategory;
 
-    std::cout << "Enter full name: ";
-    std::cin.ignore();
-    std::getline(std::cin, name);
-    std::cout << "Enter address: ";
-    std::getline(std::cin, address);
-    std::cout << "Enter email: ";
-    std::cin >> email;
-    std::cout << "Enter password: ";
-    std::cin >> password;
+    for (const auto &book : allBooks)
+    {
+        std::istringstream iss(book);
+        std::string token;
+        std::vector<std::string> tokens;
 
-    Member newMember(name, address, email, password);
-    members.push_back(newMember);
+        while (std::getline(iss, token, ','))
+        {
+            tokens.push_back(trim(token));
+        }
+
+        if (tokens.size() == 6)
+        {
+            std::string bookType = trim(tokens[5]);
+            if (toLower(bookType) == toLower(category))
+            {
+                booksInCategory.push_back(book);
+            }
+        }
+    }
+
+    return booksInCategory;
 }
+
+// Function to display books
+void displayBooks(const std::vector<std::string> &books)
+{
+    if (books.empty())
+    {
+        std::cout << "No books found in the selected category.\n";
+    }
+    else
+    {
+        for (const auto &book : books)
+        {
+            std::cout << book << "\n";
+        }
+    }
+}
+
+// Function to trim leading and trailing whitespaces from a string
+// Function to trim leading and trailing whitespaces from a string
+static std::string trim(const std::string &s);
+
+// Function to convert a string to lowercase
+static std::string tolower(const std::string &s)
+{
+    std::string result = s;
+    std::transform(result.begin(), result.end(), result.begin(), (int (*)(int))std::tolower);
+    return result;
+}
+
+std::vector<std::string> getBooksByCategory(const std::vector<std::string> &allBooks, const std::string &category);
+
+// Function to display books
+void displayBooks(const std::vector<std::string> &books);
 
 int main()
 {
+    std::ifstream inFile("library_books.csv");
+    if (!inFile.is_open())
+    {
+        std::cerr << "Error opening file: library_books.csv\n";
+        return 1;
+    }
 
-    std::vector<staff> staffMembers = loadStaffFromTxt(); // Initialize staff members from file
+    std::vector<std::string> allBooks;
+    std::string line;
+    while (std::getline(inFile, line))
+    {
+        allBooks.push_back(line);
+    }
+    inFile.close();
+
+    // Initialize staff members from file
+    std::vector<staff> staffMembers = loadStaffFromTxt();
+    // Initialize members vector for new members
     std::vector<Member> members;
-    std::vector<Book> allBooks = Book::loadBooksFromLibrary("library_books.csv");
-    std::vector<std::string> allCategories = getBookCategories();
-
+    std::vector<std::string> bookCategories = getBookCategories();
 
     // Dummy data for demonstration purposes
     staff staff1("Akshar", "123", "a@gmail.com", "1234");
@@ -200,6 +221,7 @@ int main()
                     break;
                 }
             }
+
             if (loggedIn)
             {
                 std::cout << "Successfully logged in! Press enter to proceed." << std::endl;
@@ -212,63 +234,63 @@ int main()
                     admin_Menu();
                     std::cin >> choice;
 
+                    Member members; // Declare outside the switch statement with a default constructor
+
                     switch (std::stoi(choice))
                     {
-                    case 1: {
-                            Member member = Member::loginOrRegister();
+                    case 1:
+                        members = Member::loginOrRegister();
+                        // Handle member login or registration logic
+                        // ...
                         break;
-                    }
                     case 2:
-{
-    std::cout << "Do you want to borrow a book (yes/no): ";
-    std::cin >> choice;
+                    {
+                        std::cout << "Do you want to borrow a book (yes/no): ";
+                        std::cin >> choice;
 
-    if (choice == "yes")
-    {
-        std::cout << "<------------------------BOOK CATEGORIES------------------>\n\n";
-        displayCategories(allCategories);
+                        if (choice == "yes")
+                        {
+                            std::cout << "<------------------------BOOK CATEGORIES------------------>\n\n";
 
-        int categoryChoice;
-        std::cout << "Enter the number of the category you want to explore: ";
-        std::cin >> categoryChoice;
+                            displayCategories(bookCategories);
 
-        if (categoryChoice >= 1 && categoryChoice <= allCategories.size())
-        {
-            std::string selectedCategory = allCategories[categoryChoice - 1];
-            std::vector<Book> booksInCategory = Book::getBooksByCategory(allBooks, selectedCategory);
+                            int categoryChoice;
+                            std::cout << "Enter the number of the category you want to explore: \n\n";
+                            std::cin >> categoryChoice;
 
-            if (!booksInCategory.empty())
-            {
-                Book::displayBooksByCategory(booksInCategory, selectedCategory);
-            }
-            else
-            {
-                std::cout << "No books found in category '" << selectedCategory << "'.\n";
-            }
-        }
-        else
-        {
-            std::cout << "Invalid category selection.\n";
-        }
-    }
-    break;
-}
+                            if (categoryChoice >= 1 && categoryChoice <= bookCategories.size())
+                            {
+                                std::string selectedCategory = bookCategories[categoryChoice - 1];
+                                std::vector<std::string> booksInCategory = getBooksByCategory(allBooks, selectedCategory);
 
-                    case 3:
-                            std::cout << "Exiting the process. GoodBye!\n";
-                            return 0;
+                                // Display books
+                                displayBooks(booksInCategory);
+                            }
+                            else
+                            {
+                                std::cout << "Invalid category choice.\n";
+                            }
+                        }
+                        else if (choice == "no")
+                        {
+                            break;
+                        }
+
                         break;
-
                     }
-                } while (choice != "3");
-            }
-            else
-            {
-                std::cout << "Invalid email or password." << std::endl;
+                    case 5:
+                        std::cout << "Exiting the process. Goodbye!\n";
+                        return 0;
+                    default:
+                        std::cout << "Invalid choice. Please enter a number between 1 and 5." << std::endl;
+                        break;
+                    }
+                } while (choice != "5");
             }
         }
         else if (choice == "no")
         {
+            // Registration for new staff member
             std::string name, address, email, password;
             std::cout << "Enter full name: ";
             std::cin.ignore(); // Ignore the newline character left in the buffer
@@ -294,7 +316,7 @@ int main()
                 outFile << "--------------------------\n";
                 outFile.close();
                 std::cout << "Registration successful!" << std::endl;
-                std::cout << "\n\n\tNow you can 'login' as a Staff member\n\n";
+                std::cout << "\n\n\tNow you can 'login' as a staff member\n\n";
             }
             else
             {
