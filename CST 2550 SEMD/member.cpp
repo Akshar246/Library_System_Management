@@ -1,59 +1,129 @@
-// member.cpp
 
 #include "member.h"
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
-// Define a vector to store Member objects
+// Global vector to store member data
 std::vector<Member> members;
 
 // Default constructor
-Member::Member() {}
+Member::Member() : isLoggedIn(false)
+{
+}
 
 // Parameterized constructor
-Member::Member(const std::string& name, const std::string& address, const std::string& email, const std::string& password)
-    : name(name), address(address), email(email), password(password) {}
+Member::Member(const std::string &name, const std::string &address, const std::string &email, const std::string &password)
+    : name(name), address(address), email(email), password(password), isLoggedIn(false)
+{
+}
 
 // Getter methods
-std::string Member::getFullName() const {
+std::string Member::getFullName() const
+{
     return name;
 }
 
-std::string Member::getAddress() const {
+std::string Member::getAddress() const
+{
     return address;
 }
 
-std::string Member::getEmailID() const {
+std::string Member::getEmailID() const
+{
     return email;
 }
 
-std::string Member::getPassword() const {
+std::string Member::getPassword() const
+{
     return password;
 }
 
-// Member login function
-bool Member::login(const std::string& email, const std::string& pass) const {
-    return (this->email == email && this->password == pass);
+bool Member::getIsLoggedIn() const
+{
+    return isLoggedIn;
 }
 
-// Save Member data to a text file
-void Member::saveMemberToTxt() const {
+// Member login function
+bool Member::login(const std::string &email, const std::string &pass)
+{
+    // Loop through existing members to find a match
+    for (auto &member : members)
+    {
+        if (member.getEmailID() == email && member.getPassword() == pass)
+        {
+            // If a match is found, mark the member as logged in and save to file
+            member.isLoggedIn = true;
+            member.saveMemberToTxt();
+            return true;
+        }
+    }
+    return false; // Return false if no match is found
+}
+
+// Display borrowed books for the current member
+void Member::displayBorrowedBooks() const
+{
+    std::ifstream inFile("borrowed_books.txt");
+    if (!inFile.is_open())
+    {
+        std::cerr << "Error opening file: borrowed_books.txt\n";
+        return;
+    }
+
+    std::string line;
+    bool isCurrentMember = false;
+
+    while (std::getline(inFile, line))
+    {
+        // Check if the line contains the current member's name
+        if (line.find("Member Name: " + name) != std::string::npos)
+        {
+            isCurrentMember = true;
+        }
+
+        if (isCurrentMember)
+        {
+            std::cout << line << "\n";
+        }
+
+        // Check for the end of the current member's borrowed books section
+        if (line.find("--------------------------") != std::string::npos)
+        {
+            isCurrentMember = false;
+        }
+    }
+
+    inFile.close();
+}
+
+
+// Save member information to a text file
+void Member::saveMemberToTxt() const
+{
     std::ofstream outFile("member_Data.txt", std::ios::app);
-    if (outFile.is_open()) {
+    if (outFile.is_open())
+    {
+        // Write member information to the file
         outFile << "Name: " << name << "\n";
         outFile << "Address: " << address << "\n";
         outFile << "Email: " << email << "\n";
         outFile << "Password: " << password << "\n";
-        outFile << "----------------------" << "\n";
+        outFile << "Login Status: " << (isLoggedIn ? "Logged In" : "Not Logged In") << "\n";
+        outFile << "----------------------"
+                << "\n";
         outFile.close();
         std::cout << "\nMember data saved in the database\n";
-    } else {
+    }
+    else
+    {
         std::cout << "\nUnable to open file for writing.\n";
     }
 }
 
-// Input Member data interactively
-void Member::inputMemberData() {
+// Input member data during registration
+void Member::inputMemberData()
+{
     std::cout << "\nEnter your full name: ";
     std::cin.ignore();
     std::getline(std::cin, name);
@@ -65,51 +135,57 @@ void Member::inputMemberData() {
     std::cin >> password;
 }
 
-// Static method for Member login or registration
-Member Member::loginOrRegister() {
+// Static function to handle member login or registration
+Member Member::loginOrRegister()
+{
     std::cout << "\nDo you have an account? (yes/no): ";
     std::string choice;
     std::cin >> choice;
 
-    if (choice == "yes") {
+    if (choice == "yes")
+    {
         std::string email, password;
         std::cout << "Enter email: ";
         std::cin >> email;
         std::cout << "Enter password: ";
         std::cin >> password;
 
-        // Check if the entered credentials match any existing Member
         bool loggedIn = false;
-        for (const auto& member : members) {
-            if (member.login(email, password)) {
+        for (auto &member : members)
+        {
+            if (member.login(email, password))
+            {
                 loggedIn = true;
+                member.isLoggedIn = true;
+                member.saveMemberToTxt();
+                std::cout << "\nSuccessfully logged in.";
+                std::cout << "\nNow you can borrow the books.\n Please enter to continue";
+                std::cin.ignore();
+                std::cin.get();
                 break;
             }
         }
 
-        // Display login status or prompt for registration
-        if (loggedIn) {
-            std::cout << "\nSuccessfully logged in.";
-            std::cout << "\nNow you can borrow the books.\n Please enter to continue";
-            std::cin.ignore();
-            std::cin.get();
-        } else {
+        if (!loggedIn)
+        {
             std::cout << "Invalid email or password. Registering as a new member.\n";
             Member newMember;
             newMember.inputMemberData();
             members.push_back(newMember);
             newMember.saveMemberToTxt();
         }
-    } else if (choice == "no") {
-        // Register a new Member
+    }
+    else if (choice == "no")
+    {
         Member newMember;
         newMember.inputMemberData();
         members.push_back(newMember);
         newMember.saveMemberToTxt();
-    } else {
+    }
+    else
+    {
         std::cout << "\nInvalid choice. Please enter 'yes' or 'no'.\n";
     }
 
-    // Return a default-constructed Member if neither 'yes' nor 'no'
-    return Member("", "", "", ""); // Provide default values or modify as needed
+    return Member("", "", "", ""); // Return a default-constructed member
 }
