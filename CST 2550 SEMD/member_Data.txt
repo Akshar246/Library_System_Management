@@ -1,10 +1,24 @@
-Name: Akshar
-Address: 11
-Email: b@gmail.com
-Password: 12345
+Name: 
+Address: 
+Email: 
+Password: 
+Login Status: Not Logged In
 ----------------------
-Name: Akshar
-Address: 1212
-Email: a
-Password: a
+Name: New Test Name
+Address: New Test Address
+Email: newtest@email.com
+Password: newpassword
+Login Status: Not Logged In
+----------------------
+Name: 
+Address: 
+Email: 
+Password: 
+Login Status: Not Logged In
+----------------------
+Name: New Test Name
+Address: New Test Address
+Email: newtest@email.com
+Password: newpassword
+Login Status: Not Logged In
 ----------------------
