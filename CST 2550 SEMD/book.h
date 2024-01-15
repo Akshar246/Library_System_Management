@@ -5,7 +5,8 @@
 #include <vector>
 #include <set>
 
-class Book {
+class Book
+{
 private:
     int bookID;
     std::string bookName;
@@ -17,9 +18,9 @@ private:
 public:
     // Constructors
     Book();
-    Book(const int bookID, const std::string& bookName, int pageCount,
-         const std::string& authorFirstName, const std::string& authorLastName,
-         const std::string& bookType);
+    Book(const int bookID, const std::string &bookName, int pageCount,
+         const std::string &authorFirstName, const std::string &authorLastName,
+         const std::string &bookType);
 
     // Getter methods
     int getBookID() const;
@@ -29,17 +30,18 @@ public:
     std::string getAuthorLastName() const;
     std::string getBookType() const;
 
-    // Display book information
-    void displayBookInfo() const;
-
     // Load books from CSV file
-    static std::vector<Book> loadBooksFromLibrary(const std::string& filePath);
+    static std::vector<Book> loadBooksFromLibrary(const std::string &filePath);
 
     // Display books by category
-    static void displayBooksByCategory(const std::vector<Book>& books, const std::string& category);
-    
-static std::vector<Book> getBooksByCategory(const std::vector<Book>& books, const std::string& category);
+    static void displayBooksByCategory(const std::vector<Book> &books, const std::string &category);
+
+    static std::vector<Book> getBooksByCategory(const std::vector<Book> &books, const std::string &category);
+
+    bool operator<(const Book &other) const
+    {
+        return bookID < other.bookID;
+    }
 };
 
 #endif // BOOK_H
-
